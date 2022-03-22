@@ -17,7 +17,7 @@ function Y = model(P)
     a='';
     Pt=P(ii,1:6);
     a=sprintf(' %.6f %.6f %.6f %.6f %.6f %.6f ',Pt(1),Pt(2),Pt(3),Pt(4),Pt(5),Pt(6),a);
-    command = 'python C:\Users\yanbw\.spyder-py3\projeto\simplemodel.py ';
+    command = 'python interface.py';
     command = strcat(command,a);
     [status,cmdout] = system(command);
     %%process output
