@@ -13,7 +13,3 @@ for ii = 1:6
 end
 myInput = uq_createInput(InputOpts);
 
-
-sample=uq_getSample(1e4);
-dlmwrite('Xval.txt',sample)
-dlmwrite('Yval.txt',model(sample))

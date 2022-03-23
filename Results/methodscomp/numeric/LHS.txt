@@ -1,0 +1,7 @@
+Validation error:
+       QOI|     Method| Degree | Val. error | LOOERROR | Ns
+---------------------------------
+     ADP90|       OLS| 2 |   6.65e+02 |        Inf |       15
+     ADP50|       OLS| 2 |   6.09e+02 |        Inf |       15
+     dVmax|       OLS| 2 |   2.56e+02 |        Inf |       15
+     Vrest|       OLS| 2 |   5.60e+06 |        Inf |       15

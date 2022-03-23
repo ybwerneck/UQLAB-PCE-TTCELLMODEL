@@ -21,7 +21,7 @@ TTCellModel.setParametersOfInterest(labels)
 ##Simple model use, usefull for
 ti=0
 ti=3000
-tf=3400
+tf=4000
 dt=0.01
 dtS=1
 TTCellModel.setSizeParameters(ti, tf, dt, dtS)
