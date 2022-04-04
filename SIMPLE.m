@@ -30,7 +30,8 @@ myInput = uq_createInput(InputOpts);
 MetaOpts.Type = 'Metamodel';
 MetaOpts.MetaType = 'PCE';
 MetaOpts.FullModel = myModel;
-Ns=168
+p=2
+Ns=2*factorial(p+6)/(factorial(6)*factorial(p))
 
 
 
@@ -82,7 +83,7 @@ for q = 1:length(qoiLabels)
    
     
     
-    fprintf(file,'%s,%s,%5d,%5.3e,%5.3e,%f,%f,%4d\n',qoiLabels{q}, methodLabels,myPCE.PCE(q).Basis.Degree, mean((Yv - Ypce ).^2)/var(Yv),myPCE.Error(2).LOO,sobolavgerror,sobolmaxerror, myPCE.ExpDesign.NSamples);
+    fprintf(file,'%s,%s,%5d,%f,%f,%f,%f,%4d\n',qoiLabels{q}, methodLabels,myPCE.PCE(q).Basis.Degree, mean((Yv - Ypce ).^2)/var(Yv),myPCE.Error(q).LOO,sobolavgerror,sobolmaxerror, myPCE.ExpDesign.NSamples);
    
 
 end

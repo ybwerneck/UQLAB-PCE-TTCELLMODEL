@@ -32,7 +32,9 @@ myInput = uq_createInput(InputOpts);
 MetaOpts.Type = 'Metamodel';
 MetaOpts.MetaType = 'PCE';
 MetaOpts.FullModel = myModel;
-Ns=150
+p=2
+Ns=10 
+%%2*factorial(p+6)/(factorial(6)*factorial(p))
 
 
 
@@ -88,10 +90,9 @@ YOMP = uq_evalModel(myPCE_OMP,Xval);
 YSP = uq_evalModel(myPCE_SP,Xval);
 YBCS = uq_evalModel(myPCE_BCS,Xval);
 YPCE = {YOLS, YLARS, YOMP, YSP, YBCS};
-file = fopen(sprintf("Results/methodscomp/numeric/ErrornumericNs%d.txt",Ns),'w');
+file = fopen(sprintf("Results/methodscomp/numeric/Errornumeric.csv",Ns),'a');
 
-fprintf(file,'Validation error:\n');
-fprintf(file,'%s,%s,Degree,Val. error,LOOERROR,Ns\n','QOI' ,'Method');
+%fprintf(file,'%s,%s,Degree,Val. error,LOOERROR,Ns\n','QOI' ,'Method');
 
 for q = 1:length(qoiLabels)
  uq_figure
@@ -111,7 +112,7 @@ for i = 1:length(YPCE)
     title(methodLabels{i});
     xlabel('$\mathrm{Y_{true}}$');
     ylabel(sprintf('$\\mathrm{Y_{PC}}$'));
-    fprintf(file,'%s,%s,%d,%10.2e,%10.2e,%7d\n',qoiLabels{q}, methodLabels{i},myPCEs{q}.PCE(q).Basis.Degree, mean((Yv - Ypce ).^2)/var(Yv),myPCEs{i}.Error(2).LOO, myPCEs{i}.ExpDesign.NSamples);
+    fprintf(file,'%s,%s,%d,%10.2e,%10.2e,%7d\n',qoiLabels{q}, methodLabels{i},myPCEs{i}.PCE(q).Basis.Degree, mean((Yv - Ypce ).^2)/var(Yv),myPCEs{i}.Error(q).LOO, myPCEs{i}.ExpDesign.NSamples);
 
 
 end
