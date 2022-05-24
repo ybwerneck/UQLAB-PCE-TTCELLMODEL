@@ -1,18 +1,29 @@
 
+
+    
+
+
 clearvars
 rng(100,'twister')
 uqlab
 
+p=2
+Ns=500
 
+folder=sprintf("dataset/%d/",Ns)
+qoiLabels = {'ADP90', 'ADP50', 'dVmax', 'Vrest'};
 
-Xval=dlmread('Xval.txt');
-Yval=dlmread('Yval.txt');
+X=dlmread(strcat(folder,"X.csv"));
+Xval=dlmread(strcat(folder,"validation/X.csv"));
+
+Y=Yread(folder,qoiLabels);
+Yval=Yread(strcat(folder,"validation/"),qoiLabels);
 
 
 
 methodLabels = {'OLS', 'LARS', 'OMP', 'SP', 'BCS'};
+methodTimes = {0,0,0,0,0}
 
-qoiLabels = {'ADP90', 'ADP50', 'dVmax', 'Vrest'};
 
 % Define full model using mfile
 % Mfile calls Python header for TTCellModel
@@ -20,20 +31,24 @@ qoiLabels = {'ADP90', 'ADP50', 'dVmax', 'Vrest'};
 
 
 %6 parameters  "gK1","gKs","gKr","gto","gNa","gCal"
-Model1Opts.mFile = 'model';
+
 %4 outputs ADP90, ADP50, dVmax, Vrest
-myModel = uq_createModel(Model1Opts);
+
 vals=[5.4050e+00  0.245  0.096  2.940e-01   1.48380e+01 1.750e-04 ]
 for ii = 1:6
      InputOpts.Marginals(ii).Type = 'Uniform';
     InputOpts.Marginals(ii).Parameters = [0.9*vals(ii),1.1*vals(ii)];
 end
+
+
 myInput = uq_createInput(InputOpts);
 MetaOpts.Type = 'Metamodel';
 MetaOpts.MetaType = 'PCE';
-MetaOpts.FullModel = myModel;
-p=2
-Ns=10 
+MetaOpts.ExpDesign.X = X;
+MetaOpts.ExpDesign.Y = Y;
+MetaOpts.ValidationSet.X = Xval;
+MetaOpts.ValidationSet.Y = Yval;
+
 %%2*factorial(p+6)/(factorial(6)*factorial(p))
 
 
@@ -41,45 +56,48 @@ Ns=10
 
 %%OLS ordinary least square method
 MetaOpts.Method = 'OLS';
-MetaOpts.Degree = 2:6;
-MetaOpts.ExpDesign.NSamples = Ns;
-MetaOpts.ExpDesign.Sampling = 'LHS';
-myPCE_OLS = uq_createModel(MetaOpts);
-uq_print(myPCE_OLS)
+MetaOpts.Degree = 2:4;
 
+tic
+myPCE_OLS = uq_createModel(MetaOpts);
+methodTimes{1}=toc
 
 %LARS 
 MetaOpts.Method = 'LARS';
-MetaOpts.Degree = 2:6;
+MetaOpts.Degree = 2:4;
 MetaOpts.TruncOptions.qNorm = 0.75;
-MetaOpts.ExpDesign.NSamples = Ns;
-MetaOpts.ExpDesign.Sampling = 'LHS';
+
+tic
 myPCE_LARS = uq_createModel(MetaOpts);
-uq_print(myPCE_LARS)
+methodTimes{2}=toc
 
 
 %OMP 
 MetaOpts.Method = 'OMP';
-MetaOpts.Degree = 2:6;
+MetaOpts.Degree = 2:4;
 MetaOpts.TruncOptions.qNorm = 0.75;
-myPCE_OMP = uq_createModel(MetaOpts);
-uq_print(myPCE_OMP)
 
+tic
+myPCE_OMP = uq_createModel(MetaOpts);
+methodTimes{3}=toc
 % SP subspace pursuit
 
 MetaOpts.Method = 'SP';
-MetaOpts.Degree = 2:6;
+MetaOpts.Degree = 2:4;
 MetaOpts.TruncOptions.qNorm = 0.75;
+
+tic
 myPCE_SP = uq_createModel(MetaOpts);
-uq_print(myPCE_SP)
+methodTimes{4}=toc
 
 %BCS
 MetaOpts.Method = 'BCS';
-MetaOpts.Degree = 2:6;
+MetaOpts.Degree = 2:4;
 MetaOpts.TruncOptions.qNorm = 0.75;
-myPCE_BCS = uq_createModel(MetaOpts);
-uq_print(myPCE_BCS)
 
+tic
+myPCE_BCS = uq_createModel(MetaOpts);
+methodTimes{5}=toc
 
 myPCEs = { myPCE_OLS, myPCE_LARS, myPCE_OMP, myPCE_SP, myPCE_BCS};
 
@@ -90,9 +108,12 @@ YOMP = uq_evalModel(myPCE_OMP,Xval);
 YSP = uq_evalModel(myPCE_SP,Xval);
 YBCS = uq_evalModel(myPCE_BCS,Xval);
 YPCE = {YOLS, YLARS, YOMP, YSP, YBCS};
-file = fopen(sprintf("Results/methodscomp/numeric/Errornumeric.csv",Ns),'a');
 
-%fprintf(file,'%s,%s,Degree,Val. error,LOOERROR,Ns\n','QOI' ,'Method');
+mkdir(folder,'results')
+file = fopen(strcat(folder,"results/numeric.csv"),'w');
+
+fprintf(file,'%s,%s,Degree,Val. error,LOOERROR,Ns,Time\n','QOI' ,'Method');
+
 
 for q = 1:length(qoiLabels)
  uq_figure
@@ -107,18 +128,18 @@ for i = 1:length(YPCE)
     uq_plot([min(Yv) max(Yv)], [min(Yv) max(Yv)], 'k');
    
     axis equal;
- 
+    methodTimes{i}
     hold off;
     title(methodLabels{i});
     xlabel('$\mathrm{Y_{true}}$');
     ylabel(sprintf('$\\mathrm{Y_{PC}}$'));
-    fprintf(file,'%s,%s,%d,%10.2e,%10.2e,%7d\n',qoiLabels{q}, methodLabels{i},myPCEs{i}.PCE(q).Basis.Degree, mean((Yv - Ypce ).^2)/var(Yv),myPCEs{i}.Error(q).LOO, myPCEs{i}.ExpDesign.NSamples);
+    fprintf(file,'%s,%s,%d,%10.4e,%10.4e,%7d, %10.4e\n',qoiLabels{q}, methodLabels{i},myPCEs{i}.PCE(q).Basis.Degree, mean((Yv - Ypce ).^2)/var(Yv),myPCEs{i}.Error(q).LOO, myPCEs{i}.ExpDesign.NSamples,methodTimes{i});
 
 
 end
 annotation('textbox', [0.05,0.85 , 0.1,0.1], 'string', sprintf('Ns %d',Ns))
 annotation('textbox', [0.05,0.8 , 0.1,0.1], 'string', sprintf(' %s',qoiLabels{q}))
-saveas(gcf,sprintf("Results/methodscomp/%s/compNs%d.png",qoiLabels{q},Ns))
+saveas(gcf,strcat(folder,'results/',sprintf("%s.png",qoiLabels{q})))
 
 
 

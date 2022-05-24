@@ -31,8 +31,7 @@ MetaOpts.Type = 'Metamodel';
 MetaOpts.MetaType = 'PCE';
 MetaOpts.FullModel = myModel;
 p=2
-Ns=2*factorial(p+6)/(factorial(6)*factorial(p))
-
+Ns=4
 
 
 
@@ -42,7 +41,6 @@ MetaOpts.Degree = 2:6;
 MetaOpts.ExpDesign.NSamples = Ns;
 MetaOpts.ExpDesign.Sampling = 'LHS';
 myPCE = uq_createModel(MetaOpts);
-uq_print(myPCE)
 
 YPCE = uq_evalModel(myPCE,Xval);
 file = fopen(sprintf("Results/%s/numError.csv",methodLabels),'a');
